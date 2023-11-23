@@ -1,19 +1,168 @@
 package org.example;
 
-// Press Shift twice to open the Search Everywhere dialog and type `show whitespaces`,
-// then press Enter. You can now see whitespace characters in your code.
+import java.io.InputStream;
+
+import java.util.*;
+import java.util.stream.Stream;
+
 public class Main {
     public static void main(String[] args) {
-        // Press Alt+Intro with your caret at the highlighted text to see how
-        // IntelliJ IDEA suggests fixing it.
-        System.out.printf("Hello and welcome!");
 
-        // Press Mayús+F10 or click the green arrow button in the gutter to run the code.
-        for (int i = 1; i <= 5; i++) {
+        int[][] matrizRutas = crearMatrizRutas();
+        dijkstraUnVertice(matrizRutas,0);
+    }
 
-            // Press Mayús+F9 to start debugging your code. We have set one breakpoint
-            // for you, but you can always add more by pressing Ctrl+F8.
-            System.out.println("i = " + i);
+    private static int[] crearListaClientes(){
+
+        //Codigo generado con CHATGPT3.5
+
+        int[] clientesProduccion = new int[50];
+
+        try {
+
+            // Use the class loader to load the resource as an InputStream
+            ClassLoader classLoader = Main.class.getClassLoader();
+            InputStream inputStream = classLoader.getResourceAsStream("clientes.txt");
+
+            // Check if the resource is found
+            if (inputStream == null) {
+                System.out.println("File not found in the resources folder.");
+            } else {
+                Scanner scanner = new Scanner(inputStream);
+                while (scanner.hasNextLine()) {
+                    String[] values = scanner.nextLine().split(",");
+                    clientesProduccion[Integer.parseInt(values[0])] = Integer.parseInt(values[1]);
+                }
+                scanner.close();
+            }
+        } catch (Exception e) {
+            System.out.println("An error occurred.");
         }
+        return clientesProduccion;
+    }
+
+    private static int[][] crearMatrizRutas(){
+
+        // Tamaño de la matriz
+        int filas = 6;
+        int columnas = 6;
+
+        // Crear una matriz de enteros con valores predeterminados de Integer.MAX_VALUE
+        int[][] matrizRutas = new int[filas][columnas];
+        for (int i = 0; i < filas; i++) {
+            for (int j = 0; j < columnas; j++) {
+                if (i == j){
+                    matrizRutas[i][j] = 0;
+                } else {
+                    matrizRutas[i][j] = Integer.MAX_VALUE;
+                }
+            }
+        }
+
+        try {
+
+            // Use the class loader to load the resource as an InputStream
+            ClassLoader classLoader = Main.class.getClassLoader();
+            InputStream inputStream = classLoader.getResourceAsStream("rutas.txt");
+
+            // Check if the resource is found
+            if (inputStream == null) {
+                System.out.println("File not found in the resources folder.");
+            } else {
+                Scanner scanner = new Scanner(inputStream);
+                while (scanner.hasNextLine()) {
+                    String[] values = scanner.nextLine().split(",");
+                    matrizRutas[Integer.parseInt(values[0])][Integer.parseInt(values[1])] = Integer.parseInt(values[2]);
+                }
+                scanner.close();
+            }
+        } catch (Exception e) {
+            System.out.println("An error occurred.");
+            System.out.println(e.getMessage());
+        }
+
+        // Imprimir la matriz
+        for (int i = 0; i < filas; i++) {
+            for (int j = 0; j < columnas; j++) {
+                System.out.print(matrizRutas[i][j] + " ");
+            }
+            System.out.println();
+        }
+        System.out.println();
+
+        return matrizRutas;
+    }
+
+    private static void dijkstraUnVertice(int[][] matrizRutas, int vertice) {
+
+        int ccc = 6;//CantidadCentrosClientes
+
+        //Creo el conjunto de visitados
+        Set<Integer> visitados = new HashSet<>();
+        visitados.add(vertice);
+
+        //Creo el conjunto de candidatos
+        Set<Integer> candidatos = new HashSet<>();
+        for (int x = 0; x < ccc; x++){
+            if (x != vertice){
+                candidatos.add(x);
+            }
+        }
+
+       //Creo la lista donde voy guardando los valores
+        int[] valoresDijkstra= new int[ccc];
+
+        //Cargo los valores del vecindario de v
+        for (int x = 0; x < ccc; x++){
+            valoresDijkstra[x] = matrizRutas[vertice][x];
+        }
+
+        System.out.println("Imprimo valor inicial valoresDijkstra");
+        System.out.println(Arrays.toString(valoresDijkstra));
+        System.out.println();
+
+        while (!candidatos.isEmpty()){
+            System.out.println("Candidatos a agregar: " + candidatos);
+            int min = Integer.MAX_VALUE;
+            int candidatoAAgregar = -1;
+            for( Integer candidato : candidatos){
+                if (valoresDijkstra[candidato] <= min){
+                    min = valoresDijkstra[candidato];
+                    candidatoAAgregar = candidato;
+                }
+            }
+            System.out.println("Mejor candidato a agregar: " + Integer.toString(candidatoAAgregar));
+            System.out.println("Valor MIN: " + Integer.toString(min));
+
+            visitados.add(candidatoAAgregar);
+            candidatos.remove(candidatoAAgregar);
+            List<Integer> auxCandidatos = new ArrayList<>(candidatos);
+
+            System.out.println("Lista de auxiliares: ");
+            System.out.println(auxCandidatos);
+
+            for (Integer p : auxCandidatos){
+                if (matrizRutas[candidatoAAgregar][p] != Integer.MAX_VALUE){
+                    System.out.printf("Valor %d tiene arista con %d\n",candidatoAAgregar,p);
+                    System.out.println("Valor arista: " + matrizRutas[candidatoAAgregar][p]);
+                    if (valoresDijkstra[p] != Integer.MAX_VALUE){
+                        if (valoresDijkstra[candidatoAAgregar] + matrizRutas[candidatoAAgregar][p] < valoresDijkstra[p]){
+                            System.out.println(valoresDijkstra[candidatoAAgregar] + matrizRutas[candidatoAAgregar][p] + " es mejor que " + valoresDijkstra[p]);
+                            valoresDijkstra[p] = valoresDijkstra[candidatoAAgregar] + matrizRutas[candidatoAAgregar][p];
+                        } else {
+                            System.out.println(valoresDijkstra[candidatoAAgregar] + matrizRutas[candidatoAAgregar][p] + " es peor que " + valoresDijkstra[p]);
+                        }
+                    } else {
+                        System.out.println("Agrego el valor ya que " + vertice + " no tiene arista con " + p);
+                        valoresDijkstra[p] = valoresDijkstra[candidatoAAgregar] + matrizRutas[candidatoAAgregar][p];
+                    }
+                }
+            }
+            System.out.println(Arrays.toString(valoresDijkstra));
+            System.out.println();
+        }
+
+        System.out.println(Arrays.toString(valoresDijkstra));
+
     }
 }
