@@ -9,13 +9,16 @@ public class Main {
 
         System.out.println("Lista de producion de clientes: ");
         int[] clientes = crearListaClientes();
+        int cantidadClientes = clientes.length;
         System.out.println();
+
         System.out.println("Matriz de centros de distribucion(costo Unitario y costo fijo): ");
         int[][] centros = crearMatrizCentros();
-        int[][] matrizRutas = crearMatrizRutas();
+        int cantidadCentros = centros.length;
 
+        int[][] matrizRutas = crearMatrizRutas(cantidadClientes,cantidadCentros);
         System.out.println("Matriz de costos unitarios de envio de cliente a centro: ");
-        int[][] matrizUnitarios = crearMatrizMinimos(matrizRutas);
+        int[][] matrizUnitarios = crearMatrizMinimos(matrizRutas,cantidadClientes,cantidadCentros);
 
         System.out.println("Matriz de costos totales de envio: ");
         int[][] matrizCostosTotalesEnvio = agregarCostosTransporteUnitario(matrizUnitarios, centros, clientes);
@@ -25,14 +28,11 @@ public class Main {
 
     private static int[] crearListaClientes(){
 
-        int cantidadClientes = 5;
-
         //Codigo generado con CHATGPT3.5
 
-        int[] clientesProduccion = new int[cantidadClientes];
+        List<Integer> clientesProduccion = new ArrayList<>();
 
         try {
-
             // Use the class loader to load the resource as an InputStream
             ClassLoader classLoader = Main.class.getClassLoader();
             InputStream inputStream = classLoader.getResourceAsStream("clientes.txt");
@@ -44,7 +44,7 @@ public class Main {
                 Scanner scanner = new Scanner(inputStream);
                 while (scanner.hasNextLine()) {
                     String[] values = scanner.nextLine().split(",");
-                    clientesProduccion[Integer.parseInt(values[0])] = Integer.parseInt(values[1]);
+                    clientesProduccion.add(Integer.parseInt(values[1]));
                 }
                 scanner.close();
             }
@@ -52,19 +52,18 @@ public class Main {
             System.out.println("An error occurred.");
             System.out.println(e.getMessage());
         }
-        System.out.println(Arrays.toString(clientesProduccion));
-        return clientesProduccion;
+        System.out.println(clientesProduccion);
+        return clientesProduccion.stream().mapToInt(Integer::intValue).toArray();
     }
 
     //En posicion 0 tenemos el costo unitario de enviar al puerto
     //En posicion 1 tenemos el costo fijo del centro
     private static int[][]crearMatrizCentros(){
 
-        int cantidadCentros = 3;
-
         //Codigo generado con CHATGPT3.5
 
-        int[][] matrizCentros = new int[cantidadCentros][2];
+        // List to store center coordinates dynamically
+        List<int[]> matrizCentros = new ArrayList<>();
 
         try {
             // Use the class loader to load the resource as an InputStream
@@ -78,8 +77,18 @@ public class Main {
                 Scanner scanner = new Scanner(inputStream);
                 while (scanner.hasNextLine()) {
                     String[] values = scanner.nextLine().split(",");
-                    matrizCentros[Integer.parseInt(values[0])][0] = Integer.parseInt(values[1]);
-                    matrizCentros[Integer.parseInt(values[0])][1] = Integer.parseInt(values[2]);
+                    int centroIndex = Integer.parseInt(values[0]);
+                    int xCoordinate = Integer.parseInt(values[1]);
+                    int yCoordinate = Integer.parseInt(values[2]);
+
+                    // Ensure the list has enough capacity to accommodate the center
+                    while (matrizCentros.size() <= centroIndex) {
+                        matrizCentros.add(new int[2]);
+                    }
+
+                    // Set the coordinates in the list
+                    matrizCentros.get(centroIndex)[0] = xCoordinate;
+                    matrizCentros.get(centroIndex)[1] = yCoordinate;
                 }
                 scanner.close();
             }
@@ -88,21 +97,23 @@ public class Main {
             System.out.println(e.getMessage());
         }
 
-        imprimirMatriz(matrizCentros);
+        // Convert the list to an array
+        int[][] matrizCentros2 = matrizCentros.toArray(new int[0][]);
 
-        return matrizCentros;
+        imprimirMatriz(matrizCentros2);
+
+        return matrizCentros2;
     }
 
-    private static int[][] crearMatrizRutas(){
+    private static int[][] crearMatrizRutas(int cantClientes, int cantCentros){
 
-        // Tamaño de la matriz
-        int filas = 8;
-        int columnas = 8;
+        // Tamaño de la matriz N*N
+        int N = cantCentros + cantClientes;
 
         // Crear una matriz de enteros con valores predeterminados de Integer.MAX_VALUE
-        int[][] matrizRutas = new int[filas][columnas];
-        for (int i = 0; i < filas; i++) {
-            for (int j = 0; j < columnas; j++) {
+        int[][] matrizRutas = new int[N][N];
+        for (int i = 0; i < N; i++) {
+            for (int j = 0; j < N; j++) {
                 if (i == j){
                     matrizRutas[i][j] = 0;
                 } else {
@@ -138,11 +149,10 @@ public class Main {
         return matrizRutas;
     }
 
-    private static int[] dijkstraUnVertice(int[][] matrizRutas, int vertice) {
+    private static int[] dijkstraUnVertice(int[][] matrizRutas, int vertice, int cantClientes, int cantCentros) {
 
-        int cantidadClientes = 5;
-        int cantidadCentros = 3;
-        int ccc = cantidadCentros + cantidadClientes;//CantidadCentrosClientes
+
+        int ccc = cantCentros + cantClientes;//CantidadCentrosClientes
 
         //Creo el conjunto de candidatos
         Set<Integer> candidatos = new HashSet<>();
@@ -203,30 +213,20 @@ public class Main {
         }
 
         //System.out.println(Arrays.toString(valoresDijkstra));
-        //System.out.println(Arrays.toString(valoresDijkstraCliente));
 
-        return Arrays.copyOfRange(valoresDijkstra,cantidadCentros,ccc );
+        return Arrays.copyOfRange(valoresDijkstra,0,cantClientes );
 
     }
 
-    private static int[][] crearMatrizMinimos(int[][] matrizRutas){
-        int cantidadCentrosDistrbucion = 3;
-        int cantidadClientes = 5;
-        int[][] matrizMinimos = new int[cantidadCentrosDistrbucion][cantidadClientes];
+    private static int[][] crearMatrizMinimos(int[][] matrizRutas,int cantClientes, int cantCentros){
 
-        for (int i = 0; i < cantidadCentrosDistrbucion; i++){
-            matrizMinimos[i] = dijkstraUnVertice(matrizRutas,i);
+        int[][] matrizMinimos = new int[cantCentros][cantClientes];
+
+        for (int i = cantClientes; i < cantClientes + cantCentros; i++){
+            matrizMinimos[i - cantClientes] = dijkstraUnVertice(matrizRutas,i,cantClientes, cantCentros);
         }
 
-        // Imprimir la matriz
-        for (int i = 0; i < cantidadCentrosDistrbucion; i++) {
-            System.out.printf("Centro de Distribucion %d: ",i);
-            for (int j = 0; j < cantidadClientes; j++) {
-                System.out.print(matrizMinimos[i][j] + " ");
-            }
-            System.out.println();
-        }
-        System.out.println();
+        imprimirMatriz(matrizMinimos);
 
         return matrizMinimos;
     }
@@ -303,6 +303,5 @@ public class Main {
         System.out.println();
 
     }
-
 
 }
