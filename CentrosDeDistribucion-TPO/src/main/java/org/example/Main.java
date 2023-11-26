@@ -1,4 +1,4 @@
-package main.java.org.example;
+package org.example;
 
 import java.io.InputStream;
 
@@ -10,20 +10,22 @@ public class Main {
         System.out.println("Lista de producion de clientes: ");
         int[] clientes = crearListaClientes();
         System.out.println();
-        System.out.println("Matriz de centros de distribucion( costo Unitario y costo fijo) : ");
+        System.out.println("Matriz de centros de distribucion(costo Unitario y costo fijo): ");
         int[][] centros = crearMatrizCentros();
         int[][] matrizRutas = crearMatrizRutas();
 
         System.out.println("Matriz de costos unitarios de envio de cliente a centro: ");
-        int[][] matrizMinimos = crearMatrizMinimos(matrizRutas);
+        int[][] matrizUnitarios = crearMatrizMinimos(matrizRutas);
 
         System.out.println("Matriz de costos totales de envio: ");
-        agregarCostosTransporteUnitario(matrizMinimos,centros,clientes);
+        int[][] matrizCostosTotalesEnvio = agregarCostosTransporteUnitario(matrizUnitarios, centros, clientes);
+        buscarMejorOpcion(matrizCostosTotalesEnvio,centros);
+
     }
 
     private static int[] crearListaClientes(){
 
-        int cantidadClientes = 4;
+        int cantidadClientes = 5;
 
         //Codigo generado con CHATGPT3.5
 
@@ -33,7 +35,7 @@ public class Main {
 
             // Use the class loader to load the resource as an InputStream
             ClassLoader classLoader = Main.class.getClassLoader();
-            InputStream inputStream = classLoader.getResourceAsStream("main/resources/clientes.txt");
+            InputStream inputStream = classLoader.getResourceAsStream("clientes.txt");
 
             // Check if the resource is found
             if (inputStream == null) {
@@ -48,6 +50,7 @@ public class Main {
             }
         } catch (Exception e) {
             System.out.println("An error occurred.");
+            System.out.println(e.getMessage());
         }
         System.out.println(Arrays.toString(clientesProduccion));
         return clientesProduccion;
@@ -57,17 +60,16 @@ public class Main {
     //En posicion 1 tenemos el costo fijo del centro
     private static int[][]crearMatrizCentros(){
 
-        int cantidadCentros = 2;
+        int cantidadCentros = 3;
 
         //Codigo generado con CHATGPT3.5
 
         int[][] matrizCentros = new int[cantidadCentros][2];
 
         try {
-
             // Use the class loader to load the resource as an InputStream
             ClassLoader classLoader = Main.class.getClassLoader();
-            InputStream inputStream = classLoader.getResourceAsStream("main/resources/centros.txt");
+            InputStream inputStream = classLoader.getResourceAsStream("centros.txt");
 
             // Check if the resource is found
             if (inputStream == null) {
@@ -83,16 +85,10 @@ public class Main {
             }
         } catch (Exception e) {
             System.out.println("An error occurred.");
+            System.out.println(e.getMessage());
         }
 
-        // Imprimir la matriz
-        for (int i = 0; i < cantidadCentros; i++) {
-            for (int j = 0; j < 2; j++) {
-                System.out.print(matrizCentros[i][j] + " ");
-            }
-            System.out.println();
-        }
-        System.out.println();
+        imprimirMatriz(matrizCentros);
 
         return matrizCentros;
     }
@@ -100,8 +96,8 @@ public class Main {
     private static int[][] crearMatrizRutas(){
 
         // Tamaño de la matriz
-        int filas = 6;
-        int columnas = 6;
+        int filas = 8;
+        int columnas = 8;
 
         // Crear una matriz de enteros con valores predeterminados de Integer.MAX_VALUE
         int[][] matrizRutas = new int[filas][columnas];
@@ -119,7 +115,7 @@ public class Main {
 
             // Use the class loader to load the resource as an InputStream
             ClassLoader classLoader = Main.class.getClassLoader();
-            InputStream inputStream = classLoader.getResourceAsStream("main/resources/rutas.txt");
+            InputStream inputStream = classLoader.getResourceAsStream("rutas.txt");
 
             // Check if the resource is found
             if (inputStream == null) {
@@ -137,27 +133,16 @@ public class Main {
             System.out.println(e.getMessage());
         }
 
-        // Imprimir la matriz
-        for (int i = 0; i < filas; i++) {
-            for (int j = 0; j < columnas; j++) {
-                //System.out.print(matrizRutas[i][j] + " ");
-            }
-            //System.out.println();
-        }
-        //System.out.println();
+        //imprimirMatriz(matrizRutas);
 
         return matrizRutas;
     }
 
     private static int[] dijkstraUnVertice(int[][] matrizRutas, int vertice) {
 
-        int cantidadClientes = 4;
-        int cantidadCentros = 2;
+        int cantidadClientes = 5;
+        int cantidadCentros = 3;
         int ccc = cantidadCentros + cantidadClientes;//CantidadCentrosClientes
-
-        //Creo el conjunto de visitados
-        Set<Integer> visitados = new HashSet<>();
-        visitados.add(vertice);
 
         //Creo el conjunto de candidatos
         Set<Integer> candidatos = new HashSet<>();
@@ -190,7 +175,6 @@ public class Main {
             //System.out.println("Mejor candidato a agregar: " + Integer.toString(candidatoAAgregar));
             //System.out.println("Valor MIN: " + Integer.toString(min));
 
-            visitados.add(candidatoAAgregar);
             candidatos.remove(candidatoAAgregar);
             List<Integer> auxCandidatos = new ArrayList<>(candidatos);
 
@@ -226,8 +210,8 @@ public class Main {
     }
 
     private static int[][] crearMatrizMinimos(int[][] matrizRutas){
-        int cantidadCentrosDistrbucion = 2;
-        int cantidadClientes = 4;
+        int cantidadCentrosDistrbucion = 3;
+        int cantidadClientes = 5;
         int[][] matrizMinimos = new int[cantidadCentrosDistrbucion][cantidadClientes];
 
         for (int i = 0; i < cantidadCentrosDistrbucion; i++){
@@ -247,7 +231,7 @@ public class Main {
         return matrizMinimos;
     }
 
-    private static void agregarCostosTransporteUnitario(int[][] matrizMinimos, int[][] matrizCentros, int[] clientes ){
+    private static int[][] agregarCostosTransporteUnitario(int[][] matrizMinimos, int[][] matrizCentros, int[] clientes ){
 
         for (int i = 0; i < matrizMinimos.length; i++){
             for (int j = 0; j < matrizMinimos[0].length; j++){
@@ -255,14 +239,70 @@ public class Main {
             }
         }
 
+        imprimirMatriz(matrizMinimos);
+
+        return matrizMinimos;
+    }
+
+    private static void buscarMejorOpcion(int[][] matrizCostosTotales, int[][] matrizCentros){
+
+        int cantidadCentros = matrizCostosTotales.length;
+
+        int u = -1 ;
+        int c = -1;
+
+        NodoBB nodoInicial = new NodoBB(new int[cantidadCentros],0,matrizCostosTotales, matrizCentros);
+
+        PriorityQueue<NodoBB> colaNodos = new PriorityQueue<>(Comparator.comparing(NodoBB::getC));
+        colaNodos.add(nodoInicial);
+
+        while (!colaNodos.isEmpty() && (colaNodos.peek().getC() <= u || c == -1)){
+
+            NodoBB nodoEstudiado = colaNodos.remove();
+            System.out.println("Nodo: " + Arrays.toString(nodoEstudiado.getCordenadas()));
+            System.out.println("U: " + nodoEstudiado.getU());
+            u = nodoEstudiado.getU();
+            System.out.println("C: " + nodoEstudiado.getC());
+            c = nodoEstudiado.getC();
+
+            if (nodoEstudiado.getIndice() < cantidadCentros){
+
+                int[] copiaCordenadas1 = new int[cantidadCentros];
+                System.arraycopy(nodoEstudiado.getCordenadas(),0,copiaCordenadas1,0,cantidadCentros);
+                copiaCordenadas1[nodoEstudiado.getIndice()] = 1;
+                colaNodos.add(new NodoBB(copiaCordenadas1,nodoEstudiado.getIndice() + 1, matrizCostosTotales, matrizCentros));
+
+                int[] copiaCordenadas2 = new int[cantidadCentros];
+                System.arraycopy(nodoEstudiado.getCordenadas(),0,copiaCordenadas2,0,cantidadCentros);
+
+                copiaCordenadas2[nodoEstudiado.getIndice()] = -1;
+                colaNodos.add(new NodoBB(copiaCordenadas2,nodoEstudiado.getIndice() + 1,matrizCostosTotales, matrizCentros));
+            }
+        }
+
+        System.out.println("\nEstos son los nodos que quedaron en la cola sin recorrer");
+        while (!colaNodos.isEmpty()){
+            NodoBB nodoEstudiado = colaNodos.remove();
+            System.out.println("Nodo: " + Arrays.toString(nodoEstudiado.getCordenadas()));
+            System.out.println("U: " + nodoEstudiado.getU());
+            System.out.println("C: " + nodoEstudiado.getC());
+        }
+    }
+
+    private static void imprimirMatriz(int[][] matriz){
+        int filas = matriz.length;
+        int columnas = matriz[0].length;
+
         // Imprimir la matriz
-        for (int i = 0; i < matrizMinimos.length; i++) {
-            for (int j = 0; j < matrizMinimos[0].length; j++) {
-                System.out.print(matrizMinimos[i][j] + " ");
+        for (int i = 0; i < filas; i++) {
+            for (int j = 0; j < columnas; j++) {
+                System.out.print(matriz[i][j] + " ");
             }
             System.out.println();
         }
         System.out.println();
 
     }
+
+
 }
