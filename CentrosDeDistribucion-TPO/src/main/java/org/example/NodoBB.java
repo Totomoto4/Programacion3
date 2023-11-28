@@ -33,25 +33,31 @@ public class NodoBB {
     }
 
     private int calcularU(int[][] matrizCostosTotales, int[][] matrizCentros){
+
         int cantCentros = matrizCostosTotales.length;
         int cantClientes = matrizCostosTotales[0].length;
         int u = 0;
-
         int sumaFijos = 0;
+
         //Sumo los fijos de los centros construidos
         for(int x = 0; x < cantCentros; x++){
             if (cordenadas[x] == 1){
                 sumaFijos += matrizCentros[x][1];
             }
         }
-        if (sumaFijos == 0){ //No hay ninguno construido
+
+        //No hay ninguno construido
+        if (sumaFijos == 0){
             return Integer.MAX_VALUE;
         } else {
             //Sumo los minimos de cada cliente de los centros construidos
             for (int j = 0; j < cantClientes; j++){
+
                 int minimoCliente = Integer.MAX_VALUE;
                 for (int i = 0; i < cantCentros; i++ ){
-                    if (matrizCostosTotales[i][j] < minimoCliente && this.cordenadas[i] == 1){ //Actuliza solo si esta consrtuido
+
+                    //Actuliza solo si esta consrtuido
+                    if (matrizCostosTotales[i][j] < minimoCliente && this.cordenadas[i] == 1){
                         minimoCliente = matrizCostosTotales[i][j];
                     }
                 }
@@ -62,17 +68,19 @@ public class NodoBB {
     }
     
     private int calcularC(int[][] matrizCostosTotales, int[][] matrizCentros){
+
         int cantCentros = matrizCostosTotales.length;
         int cantClientes = matrizCostosTotales[0].length;
         int c = 0;
-        
         int sumaFijos = 0;
+
         //Sumo los fijos de los centros construidos
         for(int x = 0; x < cantCentros; x++){
             if (cordenadas[x] == 1){
                 sumaFijos += matrizCentros[x][1];
             }
         }
+
         //Sumo los minimos de cada cliente de los centros construidos y eventuales (evito ya rechazados)
         for (int j = 0; j < cantClientes; j++){
             int minimoCliente = Integer.MAX_VALUE;

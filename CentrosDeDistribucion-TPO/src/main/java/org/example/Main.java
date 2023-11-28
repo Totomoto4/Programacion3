@@ -17,7 +17,7 @@ public class Main {
         int cantidadCentros = centros.length;
 
         int[][] matrizRutas = crearMatrizRutas(cantidadClientes,cantidadCentros);
-        System.out.println("Matriz de costos unitarios de envio de cliente a centro: ");
+        //System.out.println("Matriz de costos unitarios de envio de cliente a centro: ");
         int[][] matrizUnitarios = crearMatrizMinimos(matrizRutas,cantidadClientes,cantidadCentros);
 
         System.out.println("Matriz de costos totales de envio: ");
@@ -151,8 +151,7 @@ public class Main {
 
     private static int[] dijkstraUnVertice(int[][] matrizRutas, int vertice, int cantClientes, int cantCentros) {
 
-
-        int ccc = cantCentros + cantClientes;//CantidadCentrosClientes
+        int ccc = cantCentros + cantClientes;
 
         //Creo el conjunto de candidatos
         Set<Integer> candidatos = new HashSet<>();
@@ -168,12 +167,8 @@ public class Main {
         //Cargo los valores del vecindario de v
         System.arraycopy(matrizRutas[vertice], 0, valoresDijkstra, 0, ccc);
 
-        //System.out.println("Imprimo valor inicial valoresDijkstra");
-        //System.out.println(Arrays.toString(valoresDijkstra));
-        //System.out.println();
-
+        //Como propone Dijkstra, se elige el nodo conectado con menor coste, se itera hasta acabar todos los nodos
         while (!candidatos.isEmpty()){
-            //System.out.println("Candidatos a agregar: " + candidatos);
             int min = Integer.MAX_VALUE;
             int candidatoAAgregar = -1;
             for( Integer candidato : candidatos){
@@ -188,51 +183,46 @@ public class Main {
             candidatos.remove(candidatoAAgregar);
             List<Integer> auxCandidatos = new ArrayList<>(candidatos);
 
-            //System.out.println("Lista de auxiliares: ");
-            //System.out.println(auxCandidatos);
-
             for (Integer p : auxCandidatos){
+                //Reviso si el candidato tiene conexion con nodo p
                 if (matrizRutas[candidatoAAgregar][p] != Integer.MAX_VALUE){
-                    //System.out.printf("Valor %d tiene arista con %d\n",candidatoAAgregar,p);
-                    //System.out.println("Valor arista: " + matrizRutas[candidatoAAgregar][p]);
+
+                    //Reviso si ya tengo un valor que conecte al vertice con el nodo p
                     if (valoresDijkstra[p] != Integer.MAX_VALUE){
+
+                        //Si es mejor actualizo
                         if (valoresDijkstra[candidatoAAgregar] + matrizRutas[candidatoAAgregar][p] < valoresDijkstra[p]){
-                            //System.out.println(valoresDijkstra[candidatoAAgregar] + matrizRutas[candidatoAAgregar][p] + " es mejor que " + valoresDijkstra[p]);
                             valoresDijkstra[p] = valoresDijkstra[candidatoAAgregar] + matrizRutas[candidatoAAgregar][p];
-                        } else {
-                            //System.out.println(valoresDijkstra[candidatoAAgregar] + matrizRutas[candidatoAAgregar][p] + " es peor que " + valoresDijkstra[p]);
                         }
                     } else {
-                        //System.out.println("Agrego el valor ya que " + vertice + " no tiene arista con " + p);
+                        //Si no tengo un valor que conecte vertice con p, lo actualizo
                         valoresDijkstra[p] = valoresDijkstra[candidatoAAgregar] + matrizRutas[candidatoAAgregar][p];
                     }
                 }
             }
-            //System.out.println(Arrays.toString(valoresDijkstra));
-            //System.out.println();
         }
-
-        //System.out.println(Arrays.toString(valoresDijkstra));
-
+        //Devuelvo solamente los valores del nodo a los clientes, ya que solamente se va a ejecutar con los nodos centroDistribucion
         return Arrays.copyOfRange(valoresDijkstra,0,cantClientes );
-
     }
 
     private static int[][] crearMatrizMinimos(int[][] matrizRutas,int cantClientes, int cantCentros){
 
+        //Inicializo la matriz con filas(cantCentros) X columnas(cantClientes)
         int[][] matrizMinimos = new int[cantCentros][cantClientes];
 
+        //Cargo la lista devuelta de Dijkstra para cada Centro de Distribucion
         for (int i = cantClientes; i < cantClientes + cantCentros; i++){
             matrizMinimos[i - cantClientes] = dijkstraUnVertice(matrizRutas,i,cantClientes, cantCentros);
         }
 
-        imprimirMatriz(matrizMinimos);
+        //imprimirMatriz(matrizMinimos);
 
         return matrizMinimos;
     }
 
     private static int[][] agregarCostosTransporteUnitario(int[][] matrizMinimos, int[][] matrizCentros, int[] clientes ){
 
+        //Agregamos los costos de llevarlo al puerto y se multiplica por la produccion del cliente
         for (int i = 0; i < matrizMinimos.length; i++){
             for (int j = 0; j < matrizMinimos[0].length; j++){
                 matrizMinimos[i][j] = (matrizMinimos[i][j] + matrizCentros[i][0])*clientes[j];
@@ -251,42 +241,44 @@ public class Main {
         int u = -1 ;
         int c = -1;
 
+        //Creo el nodo inicial con todos los centros en estado "0" (sin decision tomada)
         NodoBB nodoInicial = new NodoBB(new int[cantidadCentros],0,matrizCostosTotales, matrizCentros);
 
+        //Inicializa la cola de prioridad ordenada de por menor C
         PriorityQueue<NodoBB> colaNodos = new PriorityQueue<>(Comparator.comparing(NodoBB::getC));
         colaNodos.add(nodoInicial);
 
+        NodoBB nodoEstudiado = null;
+
+        //Mientras haya en la cola nodos cuyo mejor caso es mejor que el peor caso actual, se sigue revisando nodos
         while (!colaNodos.isEmpty() && (colaNodos.peek().getC() <= u || c == -1)){
 
-            NodoBB nodoEstudiado = colaNodos.remove();
-            System.out.println("Nodo: " + Arrays.toString(nodoEstudiado.getCordenadas()));
-            System.out.println("U: " + nodoEstudiado.getU());
+            //Saco el nodo con el mejor caso más bajo
+            nodoEstudiado = colaNodos.remove();
             u = nodoEstudiado.getU();
-            System.out.println("C: " + nodoEstudiado.getC());
             c = nodoEstudiado.getC();
 
+            //Se revisa que no se hallan definido todos los centros
             if (nodoEstudiado.getIndice() < cantidadCentros){
 
+                //Se agrega un nodo con el proximo centro construido
                 int[] copiaCordenadas1 = new int[cantidadCentros];
                 System.arraycopy(nodoEstudiado.getCordenadas(),0,copiaCordenadas1,0,cantidadCentros);
                 copiaCordenadas1[nodoEstudiado.getIndice()] = 1;
                 colaNodos.add(new NodoBB(copiaCordenadas1,nodoEstudiado.getIndice() + 1, matrizCostosTotales, matrizCentros));
 
+                //Se agrega un nodo con el proximo centro no construido
                 int[] copiaCordenadas2 = new int[cantidadCentros];
                 System.arraycopy(nodoEstudiado.getCordenadas(),0,copiaCordenadas2,0,cantidadCentros);
-
                 copiaCordenadas2[nodoEstudiado.getIndice()] = -1;
                 colaNodos.add(new NodoBB(copiaCordenadas2,nodoEstudiado.getIndice() + 1,matrizCostosTotales, matrizCentros));
             }
         }
 
-        System.out.println("\nEstos son los nodos que quedaron en la cola sin recorrer");
-        while (!colaNodos.isEmpty()){
-            NodoBB nodoEstudiado = colaNodos.remove();
-            System.out.println("Nodo: " + Arrays.toString(nodoEstudiado.getCordenadas()));
-            System.out.println("U: " + nodoEstudiado.getU());
-            System.out.println("C: " + nodoEstudiado.getC());
-        }
+        assert nodoEstudiado != null;
+        System.out.println("El mejor nodo posible es: " + Arrays.toString(nodoEstudiado.getCordenadas()));
+        System.out.println("Tiene un valor de " + nodoEstudiado.getC());
+
     }
 
     private static void imprimirMatriz(int[][] matriz){
