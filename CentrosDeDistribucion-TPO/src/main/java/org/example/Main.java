@@ -238,8 +238,8 @@ public class Main {
 
         int cantidadCentros = matrizCostosTotales.length;
 
-        int u = -1 ;
-        int c = -1;
+        int u = Integer.MAX_VALUE ;
+        int c ;
 
         //Creo el nodo inicial con todos los centros en estado "0" (sin decision tomada)
         NodoBB nodoInicial = new NodoBB(new int[cantidadCentros],0,matrizCostosTotales, matrizCentros);
@@ -251,12 +251,16 @@ public class Main {
         NodoBB nodoEstudiado = null;
 
         //Mientras haya en la cola nodos cuyo mejor caso es mejor que el peor caso actual, se sigue revisando nodos
-        while (!colaNodos.isEmpty() && (colaNodos.peek().getC() <= u || c == -1)){
+        while (!colaNodos.isEmpty() && (colaNodos.peek().getC() <= u )){
 
             //Saco el nodo con el mejor caso más bajo
             nodoEstudiado = colaNodos.remove();
+
+            System.out.println("Nodo estudiado: " + Arrays.toString(nodoEstudiado.getCordenadas()));
+            System.out.println("U: " + nodoEstudiado.getU());
+            System.out.println("C: " + nodoEstudiado.getC());
+
             u = nodoEstudiado.getU();
-            c = nodoEstudiado.getC();
 
             //Se revisa que no se hallan definido todos los centros
             if (nodoEstudiado.getIndice() < cantidadCentros){
@@ -278,6 +282,16 @@ public class Main {
         assert nodoEstudiado != null;
         System.out.println("El mejor nodo posible es: " + Arrays.toString(nodoEstudiado.getCordenadas()));
         System.out.println("Tiene un valor de " + nodoEstudiado.getC());
+
+        System.out.println("NODOS NO ESTUDIADOS PENDIENTES EN COLA");
+        while (!colaNodos.isEmpty()){
+            //Saco el nodo con el mejor caso más bajo
+            nodoEstudiado = colaNodos.remove();
+
+            System.out.println("Nodo estudiado: " + Arrays.toString(nodoEstudiado.getCordenadas()));
+            System.out.println("U: " + nodoEstudiado.getU());
+            System.out.println("C: " + nodoEstudiado.getC());
+        }
 
     }
 
