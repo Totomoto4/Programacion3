@@ -22,7 +22,8 @@ public class Main {
 
         System.out.println("Matriz de costos totales de envio: ");
         int[][] matrizCostosTotalesEnvio = agregarCostosTransporteUnitario(matrizUnitarios, centros, clientes);
-        buscarMejorOpcion(matrizCostosTotalesEnvio,centros);
+        int[] mejorOpcion = buscarMejorOpcion(matrizCostosTotalesEnvio,centros);
+        centroACadaCliente(matrizCostosTotalesEnvio, mejorOpcion);
 
     }
 
@@ -234,7 +235,7 @@ public class Main {
         return matrizMinimos;
     }
 
-    private static void buscarMejorOpcion(int[][] matrizCostosTotales, int[][] matrizCentros){
+    private static int[] buscarMejorOpcion(int[][] matrizCostosTotales, int[][] matrizCentros){
 
         int cantidadCentros = matrizCostosTotales.length;
 
@@ -281,17 +282,17 @@ public class Main {
         assert nodoEstudiado != null;
         System.out.println("El mejor nodo posible es: " + Arrays.toString(nodoEstudiado.getCordenadas()));
         System.out.println("Tiene un valor de " + nodoEstudiado.getC());
+        return nodoEstudiado.getCordenadas();
 
-        System.out.println("NODOS NO ESTUDIADOS PENDIENTES EN COLA");
+        /*System.out.println("NODOS NO ESTUDIADOS PENDIENTES EN COLA");
         while (!colaNodos.isEmpty()){
             //Saco el nodo con el mejor caso más bajo
             nodoEstudiado = colaNodos.remove();
 
             System.out.println("Nodo estudiado: " + Arrays.toString(nodoEstudiado.getCordenadas()));
             System.out.println("U: " + nodoEstudiado.getU());
-            System.out.println("C: " + nodoEstudiado.getC());
-        }
-
+            System.out.println("C: " + nodoEstudiado.getC());*/
+        
     }
 
     private static void imprimirMatriz(int[][] matriz){
@@ -307,6 +308,63 @@ public class Main {
         }
         System.out.println();
 
+    }
+
+    private static void centroACadaCliente(int[][] matriz, int[] mejorOpcion) {
+        int largoFilas = matriz.length;
+        int largoColumnas = matriz[0].length;
+
+        Integer[][] centrosCorrespondientes = new Integer[largoFilas][largoColumnas];
+
+        // Iterar sobre las columnas de la matriz
+        for (int j = 0; j < largoColumnas; j++) {
+            int minCosto = Integer.MAX_VALUE;
+            Integer mejorFila = null;
+
+            // Encontrar la fila con el menor costo para la columna actual
+            for (int i = 0; i < largoFilas; i++) {
+                if (mejorOpcion[i] == 1 && matriz[i][j] < minCosto) {
+                    minCosto = matriz[i][j];
+                    mejorFila = i;
+                }
+            }
+
+            // Si se encuentra una fila, asignar el valor correspondiente en la matriz de resultados
+            if (mejorFila != null) {
+                centrosCorrespondientes[mejorFila][j] = j + 1;
+            }
+        }
+
+        // Iterar sobre las filas de la matriz de resultados
+        for (int k = 0; k < largoFilas; k++) {
+            boolean hasValues = false;
+
+            // Verificar si la fila contiene valores no nulos
+            for (Integer valor : centrosCorrespondientes[k]) {
+                if (valor != null) {
+                    hasValues = true;
+                    break;
+                }
+            }
+
+            // Si la fila contiene valores no nulos, imprimir la fila
+            if (hasValues) {
+                System.out.print("Al centro de distribución " + (k + 1) + " [");
+                boolean firstNonNull = true;
+
+                // Itera sobre los valores no nulos de la fila y los imprime
+                for (Integer valor : centrosCorrespondientes[k]) {
+                    if (valor != null) {
+                        if (!firstNonNull) {
+                            System.out.print(", ");
+                        }
+                        System.out.print(valor);
+                        firstNonNull = false;
+                    }
+                }
+                System.out.println("]");
+            }
+        }
     }
 
 }
