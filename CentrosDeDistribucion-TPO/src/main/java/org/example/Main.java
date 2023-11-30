@@ -239,7 +239,6 @@ public class Main {
         int cantidadCentros = matrizCostosTotales.length;
 
         int u = Integer.MAX_VALUE ;
-        int c ;
 
         //Creo el nodo inicial con todos los centros en estado "0" (sin decision tomada)
         NodoBB nodoInicial = new NodoBB(new int[cantidadCentros],0,matrizCostosTotales, matrizCentros);
