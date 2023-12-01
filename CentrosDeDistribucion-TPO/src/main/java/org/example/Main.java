@@ -17,11 +17,11 @@ public class Main {
         int cantidadCentros = centros.length;
 
         int[][] matrizRutas = crearMatrizRutas(cantidadClientes,cantidadCentros);
-        //System.out.println("Matriz de costos unitarios de envio de cliente a centro: ");
         int[][] matrizUnitarios = crearMatrizMinimos(matrizRutas,cantidadClientes,cantidadCentros);
 
         System.out.println("Matriz de costos totales de envio: ");
         int[][] matrizCostosTotalesEnvio = agregarCostosTransporteUnitario(matrizUnitarios, centros, clientes);
+        System.out.println();
         int[] mejorOpcion = buscarMejorOpcion(matrizCostosTotalesEnvio,centros);
         centroACadaCliente(matrizCostosTotalesEnvio, mejorOpcion);
 
@@ -216,7 +216,7 @@ public class Main {
             matrizMinimos[i - cantClientes] = dijkstraUnVertice(matrizRutas,i,cantClientes, cantCentros);
         }
 
-        //imprimirMatriz(matrizMinimos);
+        imprimirMatriz(matrizMinimos);
 
         return matrizMinimos;
     }
@@ -239,8 +239,6 @@ public class Main {
 
         int cantidadCentros = matrizCostosTotales.length;
 
-        int u = Integer.MAX_VALUE ;
-
         //Creo el nodo inicial con todos los centros en estado "0" (sin decision tomada)
         NodoBB nodoInicial = new NodoBB(new int[cantidadCentros],0,matrizCostosTotales, matrizCentros);
 
@@ -248,19 +246,18 @@ public class Main {
         PriorityQueue<NodoBB> colaNodos = new PriorityQueue<>(Comparator.comparing(NodoBB::getC));
         colaNodos.add(nodoInicial);
 
+        NodoBB nodoCandidato = nodoInicial;
         NodoBB nodoEstudiado = null;
 
         //Mientras haya en la cola nodos cuyo mejor caso es mejor que el peor caso actual, se sigue revisando nodos
-        while (!colaNodos.isEmpty() && (colaNodos.peek().getC() <= u )){
+        while (!colaNodos.isEmpty() && (colaNodos.peek().getC() <= nodoCandidato.getU() )){
 
             //Saco el nodo con el mejor caso más bajo
             nodoEstudiado = colaNodos.remove();
 
-            System.out.println("Nodo estudiado: " + Arrays.toString(nodoEstudiado.getCordenadas()));
-            System.out.println("U: " + nodoEstudiado.getU());
-            System.out.println("C: " + nodoEstudiado.getC());
-
-            u = nodoEstudiado.getU();
+            if (nodoEstudiado.getU() <= nodoCandidato.getU()){
+                nodoCandidato = nodoEstudiado;
+            }
 
             //Se revisa que no se hallan definido todos los centros
             if (nodoEstudiado.getIndice() < cantidadCentros){
@@ -280,9 +277,9 @@ public class Main {
         }
 
         assert nodoEstudiado != null;
-        System.out.println("El mejor nodo posible es: " + Arrays.toString(nodoEstudiado.getCordenadas()));
-        System.out.println("Tiene un valor de " + nodoEstudiado.getC());
-        return nodoEstudiado.getCordenadas();
+        System.out.println("El mejor nodo posible es: " + Arrays.toString(nodoCandidato.getCordenadas()));
+        System.out.println("Tiene un valor de " + nodoCandidato.getU());
+        return nodoCandidato.getCordenadas();
 
         /*System.out.println("NODOS NO ESTUDIADOS PENDIENTES EN COLA");
         while (!colaNodos.isEmpty()){
@@ -291,8 +288,12 @@ public class Main {
 
             System.out.println("Nodo estudiado: " + Arrays.toString(nodoEstudiado.getCordenadas()));
             System.out.println("U: " + nodoEstudiado.getU());
+            System.out.println("C: " + nodoEstudiado.getC());
+
+            System.out.println("Nodo estudiado: " + Arrays.toString(nodoEstudiado.getCordenadas()));
+            System.out.println("U: " + nodoEstudiado.getU());
             System.out.println("C: " + nodoEstudiado.getC());*/
-        
+
     }
 
     private static void imprimirMatriz(int[][] matriz){
@@ -337,18 +338,9 @@ public class Main {
 
         // Iterar sobre las filas de la matriz de resultados
         for (int k = 0; k < largoFilas; k++) {
-            boolean hasValues = false;
-
-            // Verificar si la fila contiene valores no nulos
-            for (Integer valor : centrosCorrespondientes[k]) {
-                if (valor != null) {
-                    hasValues = true;
-                    break;
-                }
-            }
 
             // Si la fila contiene valores no nulos, imprimir la fila
-            if (hasValues) {
+            if (mejorOpcion[k] == 1) {
                 System.out.print("Al centro de distribución " + (k + 1) + " [");
                 boolean firstNonNull = true;
 
